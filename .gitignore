@@ -1,0 +1,32 @@
+# Binaries
+/bin/
+/dist/
+/terraform-provider-skipjack
+/terraform-provider-skipjack_*
+*.exe
+*.test
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Go
+vendor/
+coverage.out
+coverage.html
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
