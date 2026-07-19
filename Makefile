@@ -3,10 +3,14 @@ NAMESPACE=bitnixdev
 NAME=skipjack
 BINARY=terraform-provider-${NAME}
 
-# Auto-version: YYYY.MM.DD.<revid> (UTC date + commit count).
-# Override with VERSION=... for one-off local installs.
+# Auto-version as SemVer-compatible CalVer: YYYY.MMDD.<revid>
+# (year / month*100+day / commit count). Override with VERSION=... locally.
 REVID ?= $(shell git rev-list --count HEAD 2>/dev/null || echo 0)
-VERSION ?= $(shell date -u +%Y.%m.%d).$(REVID)
+VERSION ?= $(shell \
+	y=$$(date -u +%Y); \
+	m=$$(date -u +%m); m=$$((10\#$$m)); \
+	d=$$(date -u +%d); d=$$((10\#$$d)); \
+	echo "$$y.$$((m * 100 + d)).$(REVID)")
 
 OS_ARCH?=$(shell go env GOOS)_$(shell go env GOARCH)
 

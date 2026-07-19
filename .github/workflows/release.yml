@@ -1,9 +1,16 @@
-# Auto-version and publish provider binaries as YYYY.MM.DD.<revid>.
-# revid = git rev-list --count HEAD (monotone commit count on the released tip).
+# Auto-version and publish provider binaries.
+#
+# Version is CalVer encoded as valid SemVer (GoReleaser + Terraform Registry
+# both require SemVer — no leading zeros, exactly major.minor.patch):
+#
+#   YYYY.MMDD.<revid>   e.g. 2026-07-19 commit-count 3 → 2026.719.3
+#
+#   major  = UTC year
+#   minor  = month*100 + day  (July 19 → 719, Jan 5 → 105)
+#   patch  = git rev-list --count HEAD
 #
 # Trigger: push to master (or workflow_dispatch). Humans never tag for release;
-# CI creates the vYYYY.MM.DD.<revid> tag because Terraform Registry / GitHub
-# Releases require one.
+# CI creates the v… tag because Terraform Registry / GitHub Releases require one.
 #
 # Requires repo secrets GPG_PRIVATE_KEY and PASSPHRASE (see docs/publishing.md).
 name: Release
@@ -38,7 +45,11 @@ jobs:
         run: |
           set -euo pipefail
           revid="$(git rev-list --count HEAD)"
-          version="$(date -u +%Y.%m.%d).${revid}"
+          year="$(date -u +%Y)"
+          month="$((10#$(date -u +%m)))"
+          day="$((10#$(date -u +%d)))"
+          # SemVer: no leading zeros, three numeric components only.
+          version="${year}.$((month * 100 + day)).${revid}"
           tag="v${version}"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
@@ -57,6 +68,11 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+
+      # Gate the release on unit tests (no separate Test workflow).
+      - name: Test
+        if: steps.version.outputs.skip != 'true'
+        run: go test ./... -count=1
 
       - name: Import GPG key
         if: steps.version.outputs.skip != 'true'

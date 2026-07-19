@@ -19,18 +19,25 @@ No local `make install` or `dev_overrides` required.
 
 ## Version scheme
 
-Versions are **calendar versions**, assigned automatically:
+Versions are **calendar-based**, assigned automatically, but encoded as valid
+[SemVer](https://semver.org/) because both **GoReleaser** and the **Terraform
+Registry** reject non-SemVer tags (no leading zeros, exactly three numeric
+components):
 
 ```
-YYYY.MM.DD.<revid>
+YYYY.MMDD.<revid>
 ```
 
-| Part | Source |
-| --- | --- |
-| `YYYY.MM.DD` | UTC date of the release workflow run |
-| `revid` | `git rev-list --count HEAD` (commit count at the released tip) |
+| SemVer part | Source | Example (2026-07-19, revid 12) |
+| --- | --- | --- |
+| `major` (`YYYY`) | UTC year | `2026` |
+| `minor` (`MMDD`) | `month*100 + day` (no leading zero) | `719` |
+| `patch` (`revid`) | `git rev-list --count HEAD` | `12` |
 
-Examples: `2026.07.19.12`, `2026.12.01.48`.
+Examples: `2026.719.12`, `2026.1201.48`, `2026.105.3` (Jan 5).
+
+This is the CalVer intent of `YYYY.MM.DD.<revid>`, packed into SemVer so release
+tooling accepts it. Constraint tip: use `>= 2026.1.0`, not `~> 0.1`.
 
 **You only push to `master`.** Do not create version tags yourself. The Release
 workflow computes the version, creates the GitHub Release (and the version tag
@@ -49,10 +56,9 @@ Local builds use the same version scheme via the Makefile
 
 | Piece | Role |
 | --- | --- |
-| `.github/workflows/release.yml` | On push to `master`: compute version, create release tag, build, sign, upload GitHub Release |
+| `.github/workflows/release.yml` | On push to `master`: test, version, tag, build, sign, upload GitHub Release |
 | `.goreleaser.yml` | Cross-compile zip archives + SHA256SUMS + registry manifest |
 | `terraform-registry-manifest.json` | Declares protocol 6.0 (Plugin Framework) |
-| `.github/workflows/test.yml` | CI build/test on push and PR |
 
 Registry consumers download the matching OS/arch zip from the GitHub Release
 and verify the GPG-signed checksums.
@@ -95,12 +101,12 @@ To re-run without a new commit: **Actions → Release → Run workflow**.
 Assets look like:
 
 ```
-terraform-provider-skipjack_2026.07.19.12_linux_amd64.zip
-terraform-provider-skipjack_2026.07.19.12_darwin_arm64.zip
+terraform-provider-skipjack_2026.719.12_linux_amd64.zip
+terraform-provider-skipjack_2026.719.12_darwin_arm64.zip
 ...
-terraform-provider-skipjack_2026.07.19.12_SHA256SUMS
-terraform-provider-skipjack_2026.07.19.12_SHA256SUMS.sig
-terraform-provider-skipjack_2026.07.19.12_manifest.json
+terraform-provider-skipjack_2026.719.12_SHA256SUMS
+terraform-provider-skipjack_2026.719.12_SHA256SUMS.sig
+terraform-provider-skipjack_2026.719.12_manifest.json
 ```
 
 ### 3. Register the provider on registry.terraform.io
@@ -143,7 +149,7 @@ terraform init
 ## Subsequent releases
 
 Merge or push to `master`. Each qualifying push gets a new
-`YYYY.MM.DD.<revid>` GitHub Release; the Registry picks it up once the provider
+`YYYY.MMDD.<revid>` GitHub Release; the Registry picks it up once the provider
 is linked. No manual versioning or tagging.
 
 ```sh

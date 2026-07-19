@@ -40,7 +40,7 @@ terraform {
   required_providers {
     skipjack = {
       source  = "bitnixdev/skipjack"
-      # CalVer: YYYY.MM.DD.<revid> (auto on each release)
+      # CalVer-as-SemVer: YYYY.MMDD.<revid> (auto on each release)
       version = ">= 2026.1.0"
     }
   }
@@ -227,7 +227,7 @@ terraform init
 ```
 
 Releases publish automatically on every push to `master` (version
-**`YYYY.MM.DD.<revid>`** — no manual tags). See
+**`YYYY.MMDD.<revid>`**, e.g. `2026.719.3` — no manual tags). See
 **[docs/publishing.md](docs/publishing.md)** for GPG secrets, first release,
 and Registry registration (`bitnixdev/skipjack`).
 
