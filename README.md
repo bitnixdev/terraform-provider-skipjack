@@ -205,6 +205,30 @@ data "skipjack_variables" "ci" {
 }
 ```
 
+## Installing from the Terraform Registry
+
+Once [published](docs/publishing.md), use the provider from any project without
+building it yourself:
+
+```hcl
+terraform {
+  required_providers {
+    skipjack = {
+      source  = "bitnixdev/skipjack"
+      version = "~> 0.1"
+    }
+  }
+}
+```
+
+```sh
+terraform init
+```
+
+Releases are built by GitHub Actions (GoReleaser) when you push a `v*` tag.
+See **[docs/publishing.md](docs/publishing.md)** for GPG secrets, first release,
+and Registry registration (`bitnixdev/skipjack`).
+
 ## Building and installing locally
 
 ```sh

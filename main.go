@@ -11,9 +11,10 @@ import (
 	"github.com/bitnixdev/terraform-provider-skipjack/internal/provider"
 )
 
-// goreleaser sets these at build time.
+// goreleaser sets these at build time (-X main.version / main.commit).
 var (
 	version = "dev"
+	commit  = "unknown"
 )
 
 func main() {

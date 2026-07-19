@@ -35,3 +35,15 @@ vet:
 .PHONY: tidy
 tidy:
 	go mod tidy
+
+# Local multi-arch package dry-run (does not publish or sign for release).
+.PHONY: release-snapshot
+release-snapshot:
+	goreleaser release --snapshot --clean --skip=sign
+
+# Publish: push a v* tag after GPG secrets are configured (see docs/publishing.md).
+.PHONY: release-tag
+release-tag:
+	@test -n "$(VERSION)" || (echo "VERSION=0.1.0 make release-tag"; exit 1)
+	@echo "Create and push tag: v$(VERSION:v%=%)"
+	@echo "  git tag v$(VERSION:v%=%) && git push origin v$(VERSION:v%=%)"

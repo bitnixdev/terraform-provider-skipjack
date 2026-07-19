@@ -1,10 +1,13 @@
-# Binaries
+# Binaries / release artifacts
 /bin/
 /dist/
 /terraform-provider-skipjack
 /terraform-provider-skipjack_*
 *.exe
 *.test
+*.gpg
+private.gpg
+public.gpg
 
 # Terraform
 .terraform/
