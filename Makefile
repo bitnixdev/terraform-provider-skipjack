@@ -2,10 +2,19 @@ HOSTNAME=registry.terraform.io
 NAMESPACE=bitnixdev
 NAME=skipjack
 BINARY=terraform-provider-${NAME}
-VERSION?=0.1.0
+
+# Auto-version: YYYY.MM.DD.<revid> (UTC date + commit count).
+# Override with VERSION=... for one-off local installs.
+REVID ?= $(shell git rev-list --count HEAD 2>/dev/null || echo 0)
+VERSION ?= $(shell date -u +%Y.%m.%d).$(REVID)
+
 OS_ARCH?=$(shell go env GOOS)_$(shell go env GOARCH)
 
 default: build
+
+.PHONY: version
+version:
+	@echo $(VERSION)
 
 .PHONY: build
 build:
@@ -40,10 +49,3 @@ tidy:
 .PHONY: release-snapshot
 release-snapshot:
 	goreleaser release --snapshot --clean --skip=sign
-
-# Publish: push a v* tag after GPG secrets are configured (see docs/publishing.md).
-.PHONY: release-tag
-release-tag:
-	@test -n "$(VERSION)" || (echo "VERSION=0.1.0 make release-tag"; exit 1)
-	@echo "Create and push tag: v$(VERSION:v%=%)"
-	@echo "  git tag v$(VERSION:v%=%) && git push origin v$(VERSION:v%=%)"

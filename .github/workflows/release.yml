@@ -1,11 +1,24 @@
-# Build and publish multi-platform provider binaries on version tags (v*).
+# Auto-version and publish provider binaries as YYYY.MM.DD.<revid>.
+# revid = git rev-list --count HEAD (monotone commit count on the released tip).
+#
+# Trigger: push to master (or workflow_dispatch). Humans never tag for release;
+# CI creates the vYYYY.MM.DD.<revid> tag because Terraform Registry / GitHub
+# Releases require one.
+#
 # Requires repo secrets GPG_PRIVATE_KEY and PASSPHRASE (see docs/publishing.md).
 name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - master
+    paths-ignore:
+      - "README.md"
+      - "docs/**"
+      - "examples/**"
+      - "LICENSE"
+      - ".gitignore"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,23 +30,54 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # GoReleaser needs full history for changelog/version metadata.
+          # Full history so rev-list --count and GoReleaser metadata are correct.
           fetch-depth: 0
 
+      - name: Compute version
+        id: version
+        run: |
+          set -euo pipefail
+          revid="$(git rev-list --count HEAD)"
+          version="$(date -u +%Y.%m.%d).${revid}"
+          tag="v${version}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "Computed version: ${version} (tag ${tag})"
+
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "Tag ${tag} already exists; skipping release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up Go
+        if: steps.version.outputs.skip != 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
 
       - name: Import GPG key
+        if: steps.version.outputs.skip != 'true'
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
 
+      - name: Create release tag
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.version }}"
+          # Push after local tag so GoReleaser sees it; no tag-based workflow trigger.
+          git push origin "refs/tags/${{ steps.version.outputs.tag }}"
+
       - name: Run GoReleaser
+        if: steps.version.outputs.skip != 'true'
         uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"

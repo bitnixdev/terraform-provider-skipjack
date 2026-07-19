@@ -40,7 +40,8 @@ terraform {
   required_providers {
     skipjack = {
       source  = "bitnixdev/skipjack"
-      version = "~> 0.1"
+      # CalVer: YYYY.MM.DD.<revid> (auto on each release)
+      version = ">= 2026.1.0"
     }
   }
 }
@@ -215,7 +216,7 @@ terraform {
   required_providers {
     skipjack = {
       source  = "bitnixdev/skipjack"
-      version = "~> 0.1"
+      version = ">= 2026.1.0"
     }
   }
 }
@@ -225,8 +226,9 @@ terraform {
 terraform init
 ```
 
-Releases are built by GitHub Actions (GoReleaser) when you push a `v*` tag.
-See **[docs/publishing.md](docs/publishing.md)** for GPG secrets, first release,
+Releases publish automatically on every push to `master` (version
+**`YYYY.MM.DD.<revid>`** — no manual tags). See
+**[docs/publishing.md](docs/publishing.md)** for GPG secrets, first release,
 and Registry registration (`bitnixdev/skipjack`).
 
 ## Building and installing locally
